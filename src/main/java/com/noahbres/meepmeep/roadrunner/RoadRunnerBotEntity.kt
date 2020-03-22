@@ -3,71 +3,63 @@ package com.noahbres.meepmeep.roadrunner
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
+import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.BotEntity
+import com.noahbres.meepmeep.roadrunner.entity.TrajectorySequenceEntity
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
 
-class RoadRunnerBotEntity(var constraints: TrajectoryConstraints, width: Double, height: Double, pose: Pose2d, colorScheme: ColorScheme, opacity: Double) : BotEntity(width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
+class RoadRunnerBotEntity(
+        meepMeep: MeepMeep<*>,
+        var constraints: TrajectoryConstraints,
+        width: Double, height: Double,
+        pose: Pose2d,
+        private val colorScheme: ColorScheme,
+        opacity: Double
+) : BotEntity(meepMeep, width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
+    override val zIndex: Int = 3
+
     var drive = DriveShim(constraints)
 
-    // List of either <TrajectorySequence> or <Trajectory> to follow
-    private val followList = mutableListOf<Any>()
-    // List of followed <TrajectorySequence> or <Trajectory>
-    private val followedList = mutableListOf<Any>()
+    var followMode = FollowMode.TRAJECTORY_LIST
 
-    // For following either <TrajectorySequence> or <Trajectory>
-    private var isCurrentlyFollowingSomeTrajectory = false
-    private var someTrajectoryCurrentlyFollowing: Any? = null
+    private var currentTrajectoryList = emptyList<Trajectory>()
+    private var currentTrajectorySequence: TrajectorySequence? = null
 
-    // For following <TrajectorySequence>
-    private var stepInTrajectorySequence = -1
-    private var isCurrentlyFollowingStepInTrajectorySequence = false
+    private var currentTrajectorySequenceIndex = 0
 
-    // For following <Trajectory>
+    private var trajectorySequenceEntity: TrajectorySequenceEntity? = null
 
-    @ExperimentalStdlibApi
     override fun update(deltaTime: Long) {
-        if(!isCurrentlyFollowingSomeTrajectory && followList.isNotEmpty()) {
-            someTrajectoryCurrentlyFollowing = followList.first()
-            followedList.add(followList.first())
+        if (followMode == FollowMode.TRAJECTORY_LIST) {
 
-            followList.removeFirst()
+        } else if (followMode == FollowMode.TRAJECTORY_SEQUENCE && currentTrajectorySequence != null) {
+            val currentStep = currentTrajectorySequence?.get(currentTrajectorySequenceIndex)
 
-            isCurrentlyFollowingSomeTrajectory = true
-        }
-
-        if(someTrajectoryCurrentlyFollowing != null) {
-            if(someTrajectoryCurrentlyFollowing is TrajectorySequence) {
-                val ts = someTrajectoryCurrentlyFollowing as TrajectorySequence
-
-                // Bail out and stop following once we have finished the TrajectorySequence stack
-                if(stepInTrajectorySequence >= ts.size) {
-                    isCurrentlyFollowingSomeTrajectory = false
-                    someTrajectoryCurrentlyFollowing = null
-
-                    isCurrentlyFollowingStepInTrajectorySequence = false
-                    stepInTrajectorySequence = -1
-
-                    return
-                }
-
-                if(!isCurrentlyFollowingStepInTrajectorySequence) {
-                    stepInTrajectorySequence++
-                }
-
-//                println((currentlyFollowing as TrajectorySequence).size)
-            } else if(someTrajectoryCurrentlyFollowing is Trajectory) {
-
+            if (currentStep is TrajectoryStep) {
+//                println(currentStep.trajectory)
             }
         }
     }
 
-    fun addTrajectorySequence(trajectorySequence: TrajectorySequence) {
-        println(trajectorySequence.size)
-        followList.add(trajectorySequence)
+    fun followTrajectorySequence(sequence: TrajectorySequence) {
+        followMode = FollowMode.TRAJECTORY_SEQUENCE
+
+        currentTrajectorySequence = sequence
+
+        trajectorySequenceEntity = TrajectorySequenceEntity(meepMeep, sequence, colorScheme)
+        meepMeep.addEntity(trajectorySequenceEntity!!)
     }
 
-    fun addTrajectory(trajectory: Trajectory) {
+    fun followTrajectoryList(trajectoryList: List<Trajectory>) {
+        followMode = FollowMode.TRAJECTORY_LIST
 
+        currentTrajectoryList = trajectoryList
+    }
+
+    enum class FollowMode {
+        TRAJECTORY_LIST,
+        TRAJECTORY_SEQUENCE
     }
 }
