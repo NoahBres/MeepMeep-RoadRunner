@@ -23,6 +23,7 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
                         Math.toRadians(180.0), Math.toRadians(180.0), 0.0
                 ),
                 18.0, 18.0,
+                15.0,
                 Pose2d(), colorManager.theme, 0.8)
 
         addEntity(DEFAULT_ROADRUNNER_BOT_ENTITY)
@@ -51,9 +52,23 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
         return this
     }
 
-    fun setConstraints(constraints: TrajectoryConstraints): MeepMeepRoadRunner {
+    fun setConstraints(constraints: DriveConstraints): MeepMeepRoadRunner {
         if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
-            DEFAULT_ROADRUNNER_BOT_ENTITY.constraints = constraints
+            DEFAULT_ROADRUNNER_BOT_ENTITY.setConstraints(constraints)
+
+        return this
+    }
+
+    fun setTrackWidth(trackWidth: Double): MeepMeepRoadRunner {
+        if(DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
+            DEFAULT_ROADRUNNER_BOT_ENTITY.setTrackWidth(trackWidth)
+
+        return this
+    }
+
+    fun setDriveTrainType(driveTrainType: DriveTrainType): MeepMeepRoadRunner {
+        if(DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
+            DEFAULT_ROADRUNNER_BOT_ENTITY.setDriveTrainType(driveTrainType)
 
         return this
     }
