@@ -2,6 +2,7 @@ package com.noahbres.meepmeep.roadrunner
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
+import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
@@ -12,17 +13,19 @@ import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.Trajecto
 
 class RoadRunnerBotEntity(
         meepMeep: MeepMeep<*>,
-        var constraints: TrajectoryConstraints,
+        private var constraints: DriveConstraints,
         width: Double, height: Double,
+        private var trackWidth: Double,
         pose: Pose2d,
         private val colorScheme: ColorScheme,
         opacity: Double
 ) : BotEntity(meepMeep, width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
     override val zIndex: Int = 3
 
-    var drive = DriveShim(constraints)
+    private var driveTrainType = DriveTrainType.MECANUM
+    var drive = DriveShim(driveTrainType, constraints, trackWidth)
 
-    var followMode = FollowMode.TRAJECTORY_LIST
+    private var followMode = FollowMode.TRAJECTORY_LIST
 
     private var currentTrajectoryList = emptyList<Trajectory>()
     private var currentTrajectorySequence: TrajectorySequence? = null
@@ -56,6 +59,24 @@ class RoadRunnerBotEntity(
         followMode = FollowMode.TRAJECTORY_LIST
 
         currentTrajectoryList = trajectoryList
+    }
+
+    fun setTrackWidth(trackWidth: Double) {
+        this.trackWidth = trackWidth
+
+        drive = DriveShim(driveTrainType, constraints, trackWidth)
+    }
+
+    fun setConstraints(constraints: DriveConstraints) {
+        this.constraints = constraints
+
+        drive = DriveShim(driveTrainType, constraints, trackWidth)
+    }
+
+    fun setDriveTrainType(driveTrainType: DriveTrainType) {
+        this.driveTrainType = driveTrainType
+
+        drive = DriveShim(driveTrainType, constraints, trackWidth)
     }
 
     enum class FollowMode {
