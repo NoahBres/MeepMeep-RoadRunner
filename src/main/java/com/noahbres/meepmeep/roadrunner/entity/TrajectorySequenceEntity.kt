@@ -53,9 +53,9 @@ class TrajectorySequenceEntity(
         val innerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_INNER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
         val outerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_OUTER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
 
-        var currentEndPose = trajectorySequence.firstPose()
+        var currentEndPose = trajectorySequence.firstPose
 
-        val firstVec = trajectorySequence.firstPose().vec().toScreenCoord()
+        val firstVec = trajectorySequence.firstPose.vec().toScreenCoord()
         trajectoryDrawnPath.moveTo(firstVec.x, firstVec.y)
 
         trajectorySequence.forEach { step ->
