@@ -1,11 +1,12 @@
 package com.noahbres.meepmeep.roadrunner.entity
 
 import com.acmerobotics.roadrunner.geometry.Vector2d
-import com.noahbres.meepmeep.core.MeepMeep
+import com.noahbres.meepmeep.core.*
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.ThemedEntity
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.*
+import com.noahbres.meepmeep.roadrunner.toScreenCoord
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
@@ -26,7 +27,10 @@ class TrajectorySequenceEntity(
 
     override val zIndex: Int = 2
 
-    private val PATH_STROKE_WIDTH = 0.8
+    private val PATH_INNER_STROKE_WIDTH = 0.5
+    private val PATH_OUTER_STROKE_WIDTH = 2.0
+
+    private val PATH_OUTER_OPACITY = 0.4
 
     private val TURN_CIRCLE_WIDTH = 1.0
     private val TURN_ARC_WIDTH = 7.0
@@ -56,16 +60,19 @@ class TrajectorySequenceEntity(
 
         val turnIndicatorList = mutableListOf<TurnIndicator>()
 
-        val path2d = Path2D.Double()
+        val trajectoryDrawnPath = Path2D.Double()
+
+        val innerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_INNER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
+        val outerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_OUTER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
 
         var currentEndPose = trajectorySequence.firstPose()
+
+        val firstVec = trajectorySequence.firstPose().vec().toScreenCoord()
+        trajectoryDrawnPath.moveTo(firstVec.x, firstVec.y)
 
         trajectorySequence.forEach { step ->
             if (step is TrajectoryStep) {
                 val traj = step.trajectory
-
-                gfx.stroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
-                gfx.color = colorScheme.TRAJCETORY_PATH_COLOR
 
                 val displacementSamples = (traj.path.length() / SAMPLE_RESOLUTION).roundToInt()
 
@@ -74,12 +81,10 @@ class TrajectorySequenceEntity(
                 }
 
                 val poses = displacements.map { traj.path[it] }
-                val firstVec = FieldUtil.fieldCoordsToScreenCoords(poses.first().vec().toMeepMeepVector())
-                path2d.moveTo(firstVec.x, firstVec.y)
 
                 for (pose in poses.drop(1)) {
-                    val coord = FieldUtil.fieldCoordsToScreenCoords(pose.vec().toMeepMeepVector())
-                    path2d.lineTo(coord.x, coord.y)
+                    val coord = pose.vec().toScreenCoord()
+                    trajectoryDrawnPath.lineTo(coord.x, coord.y)
                 }
 
                 currentEndPose = step.trajectory.end()
@@ -88,7 +93,13 @@ class TrajectorySequenceEntity(
             }
         }
 
-        gfx.draw(path2d)
+        gfx.stroke = outerStroke
+        gfx.color = Color(colorScheme.TRAJCETORY_PATH_COLOR.red, colorScheme.TRAJCETORY_PATH_COLOR.green, colorScheme.TRAJCETORY_PATH_COLOR.blue, (PATH_OUTER_OPACITY * 255).toInt())
+        gfx.draw(trajectoryDrawnPath)
+
+        gfx.stroke = innerStroke
+        gfx.color = colorScheme.TRAJCETORY_PATH_COLOR
+        gfx.draw(trajectoryDrawnPath)
 
         gfx.color = colorScheme.TRAJECTORY_TURN_COLOR
         gfx.stroke = BasicStroke(TURN_STROKE_WIDTH.scaleInToPixel().toFloat(), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
@@ -112,10 +123,10 @@ class TrajectorySequenceEntity(
             val translatedPoint = (it.pos + arrowPointVec).toScreenCoord()
 
             var arrow1Rotated = it.endAngle - 90.0.toRadians() + TURN_ARROW_ANGLE + TURN_ARROW_ANGLE_ADJUSTMENT
-            if(it.endAngle < it.startAngle) arrow1Rotated = 360.0.toRadians() - arrow1Rotated
+            if (it.endAngle < it.startAngle) arrow1Rotated = 360.0.toRadians() - arrow1Rotated
 
             var arrow2Rotated = it.endAngle - 90.0.toRadians() - TURN_ARROW_ANGLE + TURN_ARROW_ANGLE_ADJUSTMENT
-            if(it.endAngle < it.startAngle) arrow2Rotated = 360.0.toRadians() - arrow2Rotated
+            if (it.endAngle < it.startAngle) arrow2Rotated = 360.0.toRadians() - arrow2Rotated
 
             val arrowEndVec1 = (it.pos + arrowPointVec) + Vector2d(TURN_ARROW_LENGTH, 0.0)
                     .rotated(arrow1Rotated)
