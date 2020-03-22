@@ -2,6 +2,11 @@ package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
+import com.acmerobotics.roadrunner.path.LineSegment
+import com.acmerobotics.roadrunner.path.PathBuilder
+import com.acmerobotics.roadrunner.path.PathContinuityViolationException
+import com.acmerobotics.roadrunner.path.PathSegment
+import com.acmerobotics.roadrunner.path.heading.TangentInterpolator
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
@@ -17,7 +22,7 @@ import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
 class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseConstraints: TrajectoryConstraints) {
     private val trajectorySequence = TrajectorySequence()
 
-    var currentTrajectoryBuilder: TrajectoryBuilder? = null
+    private var currentTrajectoryBuilder: TrajectoryBuilder? = null
 
     private var reversed = false
     private var lastPose = startPose
@@ -93,7 +98,12 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
     private fun addPath(f: () -> Unit): TrajectorySequenceBuilder {
         if (currentTrajectoryBuilder == null) newPath()
 
-        f()
+        try {
+            f()
+        } catch (e: PathContinuityViolationException) {
+            newPath()
+            f()
+        }
 
         lastPose = currentTrajectoryBuilder!!.build().end()
         lastHeading = lastPose.heading
@@ -194,6 +204,8 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
         if (currentTrajectoryBuilder != null) {
             pushPath()
         }
+
+        lastPose = Pose2d(lastPose.x, lastPose.y, lastHeading)
 
         currentTrajectoryBuilder = TrajectoryBuilder(lastPose, reversed, baseConstraints)
     }
