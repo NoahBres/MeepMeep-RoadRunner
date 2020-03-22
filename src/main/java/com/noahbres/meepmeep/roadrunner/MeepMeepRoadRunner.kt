@@ -97,7 +97,3 @@ fun Pose2d.toMeepMeepPose() = com.noahbres.meepmeep.core.util.Pose2d(this.x, thi
 fun com.noahbres.meepmeep.core.util.Vector2d.toRRVector() = Vector2d(this.x, this.y)
 fun Vector2d.toMeepMeepVector() = com.noahbres.meepmeep.core.util.Vector2d(this.x, this.y)
 fun Vector2d.toScreenCoord() = FieldUtil.fieldCoordsToScreenCoords(this.toMeepMeepVector())
-
-fun Double.scaleInToPixel() = FieldUtil.scaleInchesToPixel(this)
-fun Double.toDegrees() = Math.toDegrees(this)
-fun Double.toRadians() = Math.toRadians(this)
