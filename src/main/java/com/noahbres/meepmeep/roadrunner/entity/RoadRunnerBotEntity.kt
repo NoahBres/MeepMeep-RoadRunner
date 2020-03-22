@@ -1,13 +1,14 @@
-package com.noahbres.meepmeep.roadrunner
+package com.noahbres.meepmeep.roadrunner.entity
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
-import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.BotEntity
-import com.noahbres.meepmeep.roadrunner.entity.TrajectorySequenceEntity
+import com.noahbres.meepmeep.roadrunner.DriveShim
+import com.noahbres.meepmeep.roadrunner.DriveTrainType
+import com.noahbres.meepmeep.roadrunner.toMeepMeepPose
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
 
@@ -20,7 +21,7 @@ class RoadRunnerBotEntity(
         private val colorScheme: ColorScheme,
         opacity: Double
 ) : BotEntity(meepMeep, width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
-    override val zIndex: Int = 3
+    override val zIndex: Int = 4
 
     private var driveTrainType = DriveTrainType.MECANUM
     var drive = DriveShim(driveTrainType, constraints, trackWidth)
