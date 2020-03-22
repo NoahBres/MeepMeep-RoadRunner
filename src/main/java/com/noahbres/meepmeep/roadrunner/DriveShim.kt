@@ -2,12 +2,19 @@ package com.noahbres.meepmeep.roadrunner
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
-import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
+import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
+import com.acmerobotics.roadrunner.trajectory.constraints.MecanumConstraints
+import com.acmerobotics.roadrunner.trajectory.constraints.TankConstraints
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequenceBuilder
 
-class DriveShim(private val constraints: TrajectoryConstraints) {
+class DriveShim(private val driveTrainType: DriveTrainType, private val trajectoryConstraints: DriveConstraints, private val trackWidth: Double) {
+    private val constraints = when(driveTrainType) {
+        DriveTrainType.MECANUM -> MecanumConstraints(trajectoryConstraints, trackWidth)
+        DriveTrainType.TANK -> TankConstraints(trajectoryConstraints, trackWidth)
+    }
+
     fun trajectorySequenceBuilder(startPose: Pose2d): TrajectorySequenceBuilder {
-        return TrajectorySequenceBuilder(startPose, constraints)
+        return TrajectorySequenceBuilder(startPose, constraints, trackWidth)
     }
 
     @JvmOverloads
