@@ -1,10 +1,12 @@
 package com.noahbres.meepmeep.roadrunner
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
+import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
 import com.noahbres.meepmeep.core.MeepMeep
+import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
 
 class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowSize) {
@@ -15,6 +17,7 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
 
     init {
         DEFAULT_ROADRUNNER_BOT_ENTITY = RoadRunnerBotEntity(
+                this,
                 DriveConstraints(
                         30.0, 30.0, 0.0,
                         Math.toRadians(180.0), Math.toRadians(180.0), 0.0
@@ -55,34 +58,34 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
         return this
     }
 
-    fun addTrajectorySequence(callback: AddTrajectorySequenceCallback): MeepMeepRoadRunner {
+    fun followTrajectorySequence(callback: AddTrajectorySequenceCallback): MeepMeepRoadRunner {
         if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
-            DEFAULT_ROADRUNNER_BOT_ENTITY.addTrajectorySequence(
+            DEFAULT_ROADRUNNER_BOT_ENTITY.followTrajectorySequence(
                     callback.buildTrajectorySequence(DEFAULT_ROADRUNNER_BOT_ENTITY.drive)
             )
 
         return this
     }
 
-    fun addTrajectorySequence(trajectorySequence: TrajectorySequence): MeepMeepRoadRunner {
+    fun followTrajectorySequence(trajectorySequence: TrajectorySequence): MeepMeepRoadRunner {
         if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
-            DEFAULT_ROADRUNNER_BOT_ENTITY.addTrajectorySequence(trajectorySequence)
+            DEFAULT_ROADRUNNER_BOT_ENTITY.followTrajectorySequence(trajectorySequence)
 
         return this
     }
 
-    fun addTrajectory(callback: AddTrajectoryCallback): MeepMeepRoadRunner {
+    fun followTrajectory(callback: AddTrajectoryCallback): MeepMeepRoadRunner {
         if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
-            DEFAULT_ROADRUNNER_BOT_ENTITY.addTrajectory(
+            DEFAULT_ROADRUNNER_BOT_ENTITY.followTrajectoryList(
                     callback.buildTrajectory(DEFAULT_ROADRUNNER_BOT_ENTITY.drive)
             )
 
         return this
     }
 
-    fun addTrajectory(trajectory: Trajectory): MeepMeepRoadRunner {
+    fun followTrajectory(trajectory: List<Trajectory>): MeepMeepRoadRunner {
         if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList)
-            DEFAULT_ROADRUNNER_BOT_ENTITY.addTrajectory(trajectory)
+            DEFAULT_ROADRUNNER_BOT_ENTITY.followTrajectoryList(trajectory)
 
         return this
     }
@@ -90,3 +93,11 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
 
 fun com.noahbres.meepmeep.core.util.Pose2d.toRRPose() = Pose2d(this.x, this.y, this.heading)
 fun Pose2d.toMeepMeepPose() = com.noahbres.meepmeep.core.util.Pose2d(this.x, this.y, this.heading)
+
+fun com.noahbres.meepmeep.core.util.Vector2d.toRRVector() = Vector2d(this.x, this.y)
+fun Vector2d.toMeepMeepVector() = com.noahbres.meepmeep.core.util.Vector2d(this.x, this.y)
+fun Vector2d.toScreenCoord() = FieldUtil.fieldCoordsToScreenCoords(this.toMeepMeepVector())
+
+fun Double.scaleInToPixel() = FieldUtil.scaleInchesToPixel(this)
+fun Double.toDegrees() = Math.toDegrees(this)
+fun Double.toRadians() = Math.toRadians(this)
