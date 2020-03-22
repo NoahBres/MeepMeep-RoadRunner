@@ -7,8 +7,11 @@ import com.acmerobotics.roadrunner.path.PathBuilder
 import com.acmerobotics.roadrunner.path.PathContinuityViolationException
 import com.acmerobotics.roadrunner.path.PathSegment
 import com.acmerobotics.roadrunner.path.heading.TangentInterpolator
+import com.acmerobotics.roadrunner.profile.MotionProfileGenerator
+import com.acmerobotics.roadrunner.profile.MotionState
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
+import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedDisplacementMarker
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedMarker
@@ -19,7 +22,7 @@ import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitConditionalStep
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
 
-class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseConstraints: TrajectoryConstraints) {
+class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseConstraints: DriveConstraints, private val trackWidth: Double) {
     private val trajectorySequence = TrajectorySequence()
 
     private var currentTrajectoryBuilder: TrajectoryBuilder? = null
@@ -148,8 +151,17 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
     }
 
     fun turn(angle: Double): TrajectorySequenceBuilder {
+
+        val turnProfile = MotionProfileGenerator.generateSimpleMotionProfile(
+                MotionState(lastHeading, 0.0, 0.0, 0.0),
+                MotionState(lastHeading + angle, 0.0, 0.0, 0.0),
+                baseConstraints.maxAngVel,
+                baseConstraints.maxAngAccel,
+                baseConstraints.maxAngJerk
+        )
+
         pushPath()
-        trajectorySequence.add(TurnStep(angle))
+        trajectorySequence.add(TurnStep(angle, turnProfile))
 
         lastHeading += angle
 
