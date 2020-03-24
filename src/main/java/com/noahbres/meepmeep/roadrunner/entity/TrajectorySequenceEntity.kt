@@ -59,26 +59,29 @@ class TrajectorySequenceEntity(
         trajectoryDrawnPath.moveTo(firstVec.x, firstVec.y)
 
         trajectorySequence.forEach { step ->
-            if (step is TrajectoryStep) {
-                val traj = step.trajectory
+            when(step) {
+                is TrajectoryStep -> {
+                    val traj = step.trajectory
 
-                val displacementSamples = (traj.path.length() / SAMPLE_RESOLUTION).roundToInt()
+                    val displacementSamples = (traj.path.length() / SAMPLE_RESOLUTION).roundToInt()
 
-                val displacements = (0..displacementSamples).map {
-                    it / displacementSamples.toDouble() * traj.path.length()
+                    val displacements = (0..displacementSamples).map {
+                        it / displacementSamples.toDouble() * traj.path.length()
+                    }
+
+                    val poses = displacements.map { traj.path[it] }
+
+                    for (pose in poses.drop(1)) {
+                        val coord = pose.vec().toScreenCoord()
+                        trajectoryDrawnPath.lineTo(coord.x, coord.y)
+                    }
+
+                    currentEndPose = step.trajectory.end()
                 }
-
-                val poses = displacements.map { traj.path[it] }
-
-                for (pose in poses.drop(1)) {
-                    val coord = pose.vec().toScreenCoord()
-                    trajectoryDrawnPath.lineTo(coord.x, coord.y)
+                is TurnStep -> {
+                    val turnEntity = TurnIndicatorEntity(meepMeep, colorScheme, currentEndPose.vec(), currentEndPose.heading, currentEndPose.heading + step.angle)
+                    meepMeep.addEntity(turnEntity)
                 }
-
-                currentEndPose = step.trajectory.end()
-            } else if (step is TurnStep) {
-                val turnEntity = TurnIndicatorEntity(meepMeep, colorScheme, currentEndPose.vec(), currentEndPose.heading, currentEndPose.heading + step.angle)
-                meepMeep.addEntity(turnEntity)
             }
         }
 
