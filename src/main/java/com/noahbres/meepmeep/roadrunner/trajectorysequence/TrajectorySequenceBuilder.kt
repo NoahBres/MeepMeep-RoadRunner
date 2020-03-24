@@ -2,11 +2,7 @@ package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
-import com.acmerobotics.roadrunner.path.LineSegment
-import com.acmerobotics.roadrunner.path.PathBuilder
 import com.acmerobotics.roadrunner.path.PathContinuityViolationException
-import com.acmerobotics.roadrunner.path.PathSegment
-import com.acmerobotics.roadrunner.path.heading.TangentInterpolator
 import com.acmerobotics.roadrunner.profile.MotionProfileGenerator
 import com.acmerobotics.roadrunner.profile.MotionState
 import com.acmerobotics.roadrunner.trajectory.MarkerCallback
