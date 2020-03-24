@@ -41,8 +41,13 @@ class RoadRunnerBotEntity(
 
     private var trajectorySequenceElapsedTime = 0.0
 
+    private val SKIP_LOOPS = 2
+    private var skippedLoops = 0
+
     override fun update(deltaTime: Long) {
         if (!running) return
+
+        if(skippedLoops++ < SKIP_LOOPS) return
 
         if (followMode == FollowMode.TRAJECTORY_LIST) {
 
@@ -52,8 +57,6 @@ class RoadRunnerBotEntity(
             trajectorySequenceElapsedTime += deltaTime / 1000.0
 
             if(trajectorySequenceElapsedTime <= currentTrajectorySequence!!.duration) {
-//                pose = currentTrajectorySequence!!.getPoseAtSeconds(trajectorySequenceElapsedTime).toMeepMeepPose()
-
                 val (currentStateStep, currentStateOffset) = currentTrajectorySequence!!.getCurrentState(trajectorySequenceElapsedTime)
                 when(currentStateStep) {
                     is TrajectoryStep -> {
