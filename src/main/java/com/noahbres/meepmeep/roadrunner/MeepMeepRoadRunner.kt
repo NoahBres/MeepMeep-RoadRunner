@@ -4,9 +4,9 @@ import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
-import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.util.FieldUtil
+import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
 
 class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowSize) {
@@ -33,6 +33,7 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
         super.start()
 
         removeEntity(DEFAULT_BOT_ENTITY)
+        if (DEFAULT_ROADRUNNER_BOT_ENTITY in entityList) DEFAULT_ROADRUNNER_BOT_ENTITY.start()
 
         return this
     }
