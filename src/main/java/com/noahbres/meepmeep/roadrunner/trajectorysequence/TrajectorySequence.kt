@@ -1,10 +1,7 @@
 package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.SequenceStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.*
 
 class TrajectorySequence : List<SequenceStep> {
     private val sequenceList = mutableListOf<SequenceStep>()
@@ -31,26 +28,63 @@ class TrajectorySequence : List<SequenceStep> {
 
     val duration: Double
         get() {
-            if(!durationCacheDirty) return cachedDuration
+            if (!durationCacheDirty) return cachedDuration
 
             cachedDuration = 0.0
             this.forEach {
-                if(it is TrajectoryStep)
+                if (it is TrajectoryStep)
                     cachedDuration += it.trajectory.duration()
-                if(it is TurnStep)
+                if (it is TurnStep)
                     cachedDuration += it.motionProfile.duration()
-                else if(it is WaitStep)
-                    cachedDuration+= it.seconds
+                else if (it is WaitStep)
+                    cachedDuration += it.seconds
             }
 
             return cachedDuration
         }
 
+    fun getCurrentState(time: Double): Pair<SequenceStep, Double> {
+        var totalTime = 0.0
+
+        var currentStep: SequenceStep? = null
+        var currentOffset = 0.0
+
+        val sequenceDuration: (SequenceStep) -> Double = {
+            when (it) {
+                is TrajectoryStep -> it.trajectory.duration()
+                is TurnStep -> it.motionProfile.duration()
+                is WaitStep -> 0.0
+                is WaitConditionalStep -> 0.0
+            }
+        }
+
+        val stepLengths = this.map {
+            totalTime += sequenceDuration(it)
+
+            totalTime
+        }
+
+        val stepStartTimes = (stepLengths zip this.map {
+            sequenceDuration(it)
+        }).map { (finishTime, duration) ->
+            finishTime - duration
+        }
+
+        (this.sequenceList zip stepStartTimes).forEach { (sequenceStep, sequenceStart) ->
+            if (time >= sequenceStart) {
+                currentStep = sequenceStep
+                currentOffset = time - sequenceStart
+            }
+        }
+
+        return Pair(currentStep!!, currentOffset)
+    }
+
     fun add(step: SequenceStep) {
         sequenceList.add(step)
 
         firstPoseCachedDirty = true
-        durationCacheDirty
+        durationCacheDirty = true
     }
 
     override fun contains(element: SequenceStep) = sequenceList.contains(element)
