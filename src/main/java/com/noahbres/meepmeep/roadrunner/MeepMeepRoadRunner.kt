@@ -8,6 +8,9 @@ import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
+import java.awt.BorderLayout
+import javax.swing.BoxLayout
+import javax.swing.JPanel
 
 class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowSize) {
     companion object {
@@ -15,7 +18,15 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
         lateinit var DEFAULT_ROADRUNNER_BOT_ENTITY: RoadRunnerBotEntity
     }
 
+    val sliderPanel = JPanel()
+
     init {
+        sliderPanel.layout = BoxLayout(sliderPanel, BoxLayout.Y_AXIS)
+//        sliderPanel.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
+
+        windowFrame.contentPane.add(sliderPanel, BorderLayout.PAGE_END)
+        windowFrame.pack()
+
         DEFAULT_ROADRUNNER_BOT_ENTITY = RoadRunnerBotEntity(
                 this,
                 DriveConstraints(
