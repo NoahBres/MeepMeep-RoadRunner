@@ -6,12 +6,15 @@ import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.BotEntity
+import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.DriveShim
 import com.noahbres.meepmeep.roadrunner.DriveTrainType
+import com.noahbres.meepmeep.roadrunner.MeepMeepRoadRunner
 import com.noahbres.meepmeep.roadrunner.toMeepMeepPose
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
+import com.noahbres.meepmeep.roadrunner.ui.TrajectoryProgressSlider
 
 class RoadRunnerBotEntity(
         meepMeep: MeepMeep<*>,
@@ -30,9 +33,7 @@ class RoadRunnerBotEntity(
     private var followMode = FollowMode.TRAJECTORY_LIST
 
     private var currentTrajectoryList = emptyList<Trajectory>()
-    private var currentTrajectorySequence: TrajectorySequence? = null
-
-    private var currentTrajectorySequenceIndex = 0
+    var currentTrajectorySequence: TrajectorySequence? = null
 
     private var trajectorySequenceEntity: TrajectorySequenceEntity? = null
 
@@ -40,37 +41,65 @@ class RoadRunnerBotEntity(
     private var running = false
 
     private var trajectorySequenceElapsedTime = 0.0
+    private var trajectoryPaused = false
 
     private val SKIP_LOOPS = 2
     private var skippedLoops = 0
 
+    private val PROGRESS_SLIDER_HEIGHT = 20
+    private val progressSlider = TrajectoryProgressSlider(
+            this,
+            FieldUtil.CANVAS_WIDTH.toInt(),
+            PROGRESS_SLIDER_HEIGHT,
+            colorScheme.TRAJECTORY_SLIDER_FG,
+            colorScheme.TRAJECTORY_SLIDER_BG,
+            colorScheme.TRAJECTORY_TEXT_COLOR,
+            MeepMeep.FONT_CMU_BOLD
+    )
+
+    init {
+        progressSlider.progress = 0.0
+        (meepMeep as MeepMeepRoadRunner).sliderPanel.add(progressSlider)
+
+        meepMeep.windowFrame
+    }
+
     override fun update(deltaTime: Long) {
         if (!running) return
 
-        if(skippedLoops++ < SKIP_LOOPS) return
+        if (skippedLoops++ < SKIP_LOOPS) return
 
         if (followMode == FollowMode.TRAJECTORY_LIST) {
 
         } else if (followMode == FollowMode.TRAJECTORY_SEQUENCE && currentTrajectorySequence != null) {
-            val currentStep = currentTrajectorySequence?.get(currentTrajectorySequenceIndex)
+            if (!trajectoryPaused) trajectorySequenceElapsedTime += deltaTime / 1000.0
 
-            trajectorySequenceElapsedTime += deltaTime / 1000.0
+            when {
+                trajectorySequenceElapsedTime <= currentTrajectorySequence!!.duration -> {
+                    val (currentStateStep, currentStateOffset) = currentTrajectorySequence!!.getCurrentState(
+                            trajectorySequenceElapsedTime
+                    )
+                    when (currentStateStep) {
+                        is TrajectoryStep -> {
+                            pose = currentStateStep.trajectory[currentStateOffset].toMeepMeepPose()
+                        }
+                        is TurnStep -> {
+                            val currVec = currentStateStep.pos
+                            pose = Pose2d(currVec.x, currVec.y, currentStateStep.motionProfile[currentStateOffset].x).toMeepMeepPose()
+                        }
+                    }
 
-            if(trajectorySequenceElapsedTime <= currentTrajectorySequence!!.duration) {
-                val (currentStateStep, currentStateOffset) = currentTrajectorySequence!!.getCurrentState(trajectorySequenceElapsedTime)
-                when(currentStateStep) {
-                    is TrajectoryStep -> {
-                        pose = currentStateStep.trajectory[currentStateOffset].toMeepMeepPose()
-                    }
-                    is TurnStep -> {
-                       pose = Pose2d(pose.x, pose.y, currentStateStep.motionProfile[currentStateOffset].x).toMeepMeepPose()
-                    }
+                    progressSlider.progress = (trajectorySequenceElapsedTime / currentTrajectorySequence!!.duration)
                 }
-            } else if(looping) {
-                trajectorySequenceElapsedTime = 0.0
-            } else {
-                trajectorySequenceElapsedTime = 0.0
-                currentTrajectorySequence = null
+
+                looping -> {
+                    trajectorySequenceElapsedTime = 0.0
+                }
+
+                else -> {
+                    trajectorySequenceElapsedTime = 0.0
+                    currentTrajectorySequence = null
+                }
             }
         }
     }
@@ -78,6 +107,23 @@ class RoadRunnerBotEntity(
     fun start() {
         running = true
         trajectorySequenceElapsedTime = 0.0
+    }
+
+    fun pause() {
+        trajectoryPaused = true
+    }
+
+    fun unPause() {
+        trajectoryPaused = false
+    }
+
+    fun togglePause() {
+        trajectoryPaused = !trajectoryPaused
+    }
+
+    fun setTrajectoryProgress(progress: Double) {
+        if (currentTrajectorySequence != null)
+            trajectorySequenceElapsedTime = progress * currentTrajectorySequence!!.duration
     }
 
     fun followTrajectorySequence(sequence: TrajectorySequence) {
@@ -111,6 +157,14 @@ class RoadRunnerBotEntity(
         this.driveTrainType = driveTrainType
 
         drive = DriveShim(driveTrainType, constraints, trackWidth)
+    }
+
+    override fun switchScheme(scheme: ColorScheme) {
+        super.switchScheme(scheme)
+
+        this.progressSlider.fg = scheme.TRAJECTORY_SLIDER_FG
+        this.progressSlider.bg = scheme.TRAJECTORY_SLIDER_BG
+        this.progressSlider.textColor = scheme.TRAJECTORY_TEXT_COLOR
     }
 
     enum class FollowMode {
