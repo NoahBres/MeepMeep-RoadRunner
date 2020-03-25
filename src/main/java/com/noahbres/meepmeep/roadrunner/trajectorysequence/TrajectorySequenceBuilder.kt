@@ -157,7 +157,7 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
         )
 
         pushPath()
-        trajectorySequence.add(TurnStep(angle, turnProfile))
+        trajectorySequence.add(TurnStep(lastPose.vec(), angle, turnProfile))
 
         lastHeading += angle
 
