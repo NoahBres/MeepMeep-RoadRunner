@@ -24,6 +24,8 @@ class TrajectorySequenceEntity(
 
     override val zIndex: Int = 2
 
+    private val turnEntityList = mutableListOf<TurnIndicatorEntity>()
+
     private val PATH_INNER_STROKE_WIDTH = 0.5
     private val PATH_OUTER_STROKE_WIDTH = 2.0
 
@@ -38,11 +40,19 @@ class TrajectorySequenceEntity(
     }
 
     private fun redrawPath() {
+        // Request to clear previous turn indicator entities
+        turnEntityList.forEach {
+            meepMeep.requestToClearEntity(it)
+        }
+        turnEntityList.clear()
+
         val environment = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val device = environment.defaultScreenDevice
         val config = device.defaultConfiguration
 
-        baseBufferedImage = config.createCompatibleImage(canvasWidth.toInt(), canvasHeight.toInt(), Transparency.TRANSLUCENT)
+        baseBufferedImage = config.createCompatibleImage(
+                canvasWidth.toInt(), canvasHeight.toInt(), Transparency.TRANSLUCENT
+        )
         val gfx = baseBufferedImage.createGraphics()
 
         gfx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
@@ -50,8 +60,14 @@ class TrajectorySequenceEntity(
 
         val trajectoryDrawnPath = Path2D.Double()
 
-        val innerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_INNER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
-        val outerStroke = BasicStroke(FieldUtil.scaleInchesToPixel(PATH_OUTER_STROKE_WIDTH).toFloat(), BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND)
+        val innerStroke = BasicStroke(
+                FieldUtil.scaleInchesToPixel(PATH_INNER_STROKE_WIDTH).toFloat(),
+                BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND
+        )
+        val outerStroke = BasicStroke(
+                FieldUtil.scaleInchesToPixel(PATH_OUTER_STROKE_WIDTH).toFloat(),
+                BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND
+        )
 
         var currentEndPose = trajectorySequence.firstPose
 
@@ -59,7 +75,7 @@ class TrajectorySequenceEntity(
         trajectoryDrawnPath.moveTo(firstVec.x, firstVec.y)
 
         trajectorySequence.forEach { step ->
-            when(step) {
+            when (step) {
                 is TrajectoryStep -> {
                     val traj = step.trajectory
 
@@ -79,14 +95,22 @@ class TrajectorySequenceEntity(
                     currentEndPose = step.trajectory.end()
                 }
                 is TurnStep -> {
-                    val turnEntity = TurnIndicatorEntity(meepMeep, colorScheme, currentEndPose.vec(), currentEndPose.heading, currentEndPose.heading + step.angle)
-                    meepMeep.addEntity(turnEntity)
+                    val turnEntity = TurnIndicatorEntity(
+                            meepMeep, colorScheme, currentEndPose.vec(), currentEndPose.heading,
+                            currentEndPose.heading + step.angle
+                    )
+                    turnEntityList.add(turnEntity)
+                    meepMeep.requestToAddEntity(turnEntity)
+//                    meepMeep.addEntity(turnEntity)
                 }
             }
         }
 
         gfx.stroke = outerStroke
-        gfx.color = Color(colorScheme.TRAJCETORY_PATH_COLOR.red, colorScheme.TRAJCETORY_PATH_COLOR.green, colorScheme.TRAJCETORY_PATH_COLOR.blue, (PATH_OUTER_OPACITY * 255).toInt())
+        gfx.color = Color(
+                colorScheme.TRAJCETORY_PATH_COLOR.red, colorScheme.TRAJCETORY_PATH_COLOR.green,
+                colorScheme.TRAJCETORY_PATH_COLOR.blue, (PATH_OUTER_OPACITY * 255).toInt()
+        )
         gfx.draw(trajectoryDrawnPath)
 
         gfx.stroke = innerStroke
@@ -94,9 +118,7 @@ class TrajectorySequenceEntity(
         gfx.draw(trajectoryDrawnPath)
     }
 
-    override fun update(deltaTime: Long) {
-
-    }
+    override fun update(deltaTime: Long) {}
 
     override fun render(gfx: Graphics2D, canvasWidth: Int, canvasHeight: Int) {
         gfx.drawImage(baseBufferedImage, null, 0, 0)
@@ -109,8 +131,10 @@ class TrajectorySequenceEntity(
     }
 
     override fun switchScheme(scheme: ColorScheme) {
-        if (this.colorScheme != scheme) redrawPath()
-        this.colorScheme = scheme
+        if (this.colorScheme != scheme) {
+            this.colorScheme = scheme
+            redrawPath()
+        }
     }
 
     data class TurnIndicator(val pos: Vector2d, val startAngle: Double, val endAngle: Double)
