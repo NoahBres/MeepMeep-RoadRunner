@@ -27,6 +27,8 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
     private var lastPose = startPose
     private var lastHeading = startPose.heading
 
+    private var currentDuration = 0.0
+
     private val markerBuffer = mutableListOf<BufferedMarker>()
 
     @JvmOverloads
@@ -157,7 +159,9 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
         )
 
         pushPath()
-        trajectorySequence.add(TurnStep(lastPose.vec(), angle, turnProfile))
+        trajectorySequence.add(TurnStep(lastPose.vec(), angle, turnProfile, currentDuration, turnProfile.duration()))
+
+        currentDuration += turnProfile.duration()
 
         lastHeading += angle
 
@@ -166,14 +170,16 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
 
     fun waitSeconds(seconds: Double): TrajectorySequenceBuilder {
         pushPath()
-        trajectorySequence.add(WaitStep(seconds))
+        trajectorySequence.add(WaitStep(seconds, currentDuration, seconds))
+        currentDuration += seconds
 
         return this
     }
 
     fun waitFor(callback: WaitCallback): TrajectorySequenceBuilder {
         pushPath()
-        trajectorySequence.add(WaitConditionalStep(callback))
+        trajectorySequence.add(WaitConditionalStep(callback, currentDuration, 0.0))
+        currentDuration += 0.0
 
         return this
     }
@@ -202,7 +208,9 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
             }
             markerBuffer.clear()
 
-            trajectorySequence.add(TrajectoryStep(currentTrajectoryBuilder!!.build()))
+            val builtTraj = currentTrajectoryBuilder!!.build()
+            trajectorySequence.add(TrajectoryStep(builtTraj, currentDuration, builtTraj.duration()))
+            currentDuration += builtTraj.duration()
         }
 
         currentTrajectoryBuilder = null
