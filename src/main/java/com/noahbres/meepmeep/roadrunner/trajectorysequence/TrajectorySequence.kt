@@ -1,7 +1,10 @@
 package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.*
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.SequenceStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
 
 class TrajectorySequence : List<SequenceStep> {
     private val sequenceList = mutableListOf<SequenceStep>()
@@ -49,26 +52,13 @@ class TrajectorySequence : List<SequenceStep> {
         var currentStep: SequenceStep? = null
         var currentOffset = 0.0
 
-        val sequenceDuration: (SequenceStep) -> Double = {
-            when (it) {
-                is TrajectoryStep -> it.trajectory.duration()
-                is TurnStep -> it.motionProfile.duration()
-                is WaitStep -> 0.0
-                is WaitConditionalStep -> 0.0
-            }
-        }
-
         val stepLengths = this.map {
-            totalTime += sequenceDuration(it)
+            totalTime += it.duration
 
             totalTime
         }
 
-        val stepStartTimes = (stepLengths zip this.map {
-            sequenceDuration(it)
-        }).map { (finishTime, duration) ->
-            finishTime - duration
-        }
+        val stepStartTimes = this.map { it.startTime }
 
         (this.sequenceList zip stepStartTimes).forEach { (sequenceStep, sequenceStart) ->
             if (time >= sequenceStart) {
