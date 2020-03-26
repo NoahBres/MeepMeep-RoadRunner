@@ -25,6 +25,7 @@ class TrajectorySequenceEntity(
     override val zIndex: Int = 2
 
     private val turnEntityList = mutableListOf<TurnIndicatorEntity>()
+    val markerEntityList = mutableListOf<MarkerIndicatorEntity>()
 
     private val PATH_INNER_STROKE_WIDTH = 0.5
     private val PATH_OUTER_STROKE_WIDTH = 2.0
@@ -45,6 +46,12 @@ class TrajectorySequenceEntity(
             meepMeep.requestToClearEntity(it)
         }
         turnEntityList.clear()
+
+        // Request to clear previous marker indicator entities
+        markerEntityList.forEach {
+            meepMeep.requestToClearEntity(it)
+        }
+        markerEntityList.clear()
 
         val environment = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val device = environment.defaultScreenDevice
@@ -77,6 +84,7 @@ class TrajectorySequenceEntity(
         trajectorySequence.forEach { step ->
             when (step) {
                 is TrajectoryStep -> {
+                    // Draw trajectory
                     val traj = step.trajectory
 
                     val displacementSamples = (traj.path.length() / SAMPLE_RESOLUTION).roundToInt()
@@ -93,6 +101,17 @@ class TrajectorySequenceEntity(
                     }
 
                     currentEndPose = step.trajectory.end()
+
+                    // Get markers
+                    if (traj.markers.isNotEmpty()) {
+                        traj.markers.forEach {
+                            val markerEntity = MarkerIndicatorEntity(
+                                    meepMeep, colorScheme, traj[it.time], it.time, step
+                            )
+                            markerEntityList.add(markerEntity)
+                            meepMeep.requestToAddEntity(markerEntity)
+                        }
+                    }
                 }
                 is TurnStep -> {
                     val turnEntity = TurnIndicatorEntity(
@@ -101,7 +120,6 @@ class TrajectorySequenceEntity(
                     )
                     turnEntityList.add(turnEntity)
                     meepMeep.requestToAddEntity(turnEntity)
-//                    meepMeep.addEntity(turnEntity)
                 }
             }
         }
