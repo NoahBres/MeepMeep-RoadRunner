@@ -25,7 +25,7 @@ class RoadRunnerBotEntity(
         private val colorScheme: ColorScheme,
         opacity: Double
 ) : BotEntity(meepMeep, width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
-    override val zIndex: Int = 4
+    override val zIndex: Int = 5
 
     private var driveTrainType = DriveTrainType.MECANUM
     var drive = DriveShim(driveTrainType, constraints, trackWidth)
@@ -60,6 +60,7 @@ class RoadRunnerBotEntity(
     init {
         progressSlider.progress = 0.0
         (meepMeep as MeepMeepRoadRunner).sliderPanel.add(progressSlider)
+        meepMeep.windowFrame.pack()
 
         meepMeep.windowFrame
     }
@@ -82,6 +83,12 @@ class RoadRunnerBotEntity(
                     when (currentStateStep) {
                         is TrajectoryStep -> {
                             pose = currentStateStep.trajectory[currentStateOffset].toMeepMeepPose()
+
+                            trajectorySequenceEntity!!.markerEntityList.forEach {
+                                if(it.trajectoryStep == currentStateStep) {
+                                    if(currentStateOffset >= it.time) it.passed()
+                                }
+                            }
                         }
                         is TurnStep -> {
                             val currVec = currentStateStep.pos
@@ -93,6 +100,9 @@ class RoadRunnerBotEntity(
                 }
 
                 looping -> {
+                    trajectorySequenceEntity!!.markerEntityList.forEach {
+                        it.reset()
+                    }
                     trajectorySequenceElapsedTime = 0.0
                 }
 
