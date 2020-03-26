@@ -25,10 +25,10 @@ class TurnIndicatorEntity(
     private var canvasWidth = FieldUtil.CANVAS_WIDTH
     private var canvasHeight = FieldUtil.CANVAS_HEIGHT
 
-    override val zIndex: Int = 3
+    override val zIndex: Int = 4
 
-    private val TURN_CIRCLE_WIDTH = 1.0
-    private val TURN_ARC_WIDTH = 7.0
+    private val TURN_CIRCLE_RADIUS = 1.0
+    private val TURN_ARC_RADIUS = 7.5
     private val TURN_STROKE_WIDTH = 0.5
     private val TURN_ARROW_LENGTH = 1.5
     private val TURN_ARROW_ANGLE = 30.0.toRadians()
@@ -42,20 +42,20 @@ class TurnIndicatorEntity(
         gfx.stroke = BasicStroke(TURN_STROKE_WIDTH.scaleInToPixel().toFloat(), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
 
         gfx.fillOval(
-                (pos.toScreenCoord().x - TURN_CIRCLE_WIDTH.scaleInToPixel() / 2).toInt(),
-                (pos.toScreenCoord().y - TURN_CIRCLE_WIDTH.scaleInToPixel() / 2).toInt(),
-                TURN_CIRCLE_WIDTH.scaleInToPixel().toInt(), TURN_CIRCLE_WIDTH.scaleInToPixel().toInt()
+                (pos.toScreenCoord().x - TURN_CIRCLE_RADIUS.scaleInToPixel() / 2).toInt(),
+                (pos.toScreenCoord().y - TURN_CIRCLE_RADIUS.scaleInToPixel() / 2).toInt(),
+                TURN_CIRCLE_RADIUS.scaleInToPixel().toInt(), TURN_CIRCLE_RADIUS.scaleInToPixel().toInt()
         )
 
         gfx.drawArc(
-                (pos.toScreenCoord().x - TURN_ARC_WIDTH.scaleInToPixel() / 2).toInt(),
-                (pos.toScreenCoord().y - TURN_ARC_WIDTH.scaleInToPixel() / 2).toInt(),
-                TURN_ARC_WIDTH.scaleInToPixel().toInt(), TURN_ARC_WIDTH.scaleInToPixel().toInt(),
+                (pos.toScreenCoord().x - TURN_ARC_RADIUS.scaleInToPixel() / 2).toInt(),
+                (pos.toScreenCoord().y - TURN_ARC_RADIUS.scaleInToPixel() / 2).toInt(),
+                TURN_ARC_RADIUS.scaleInToPixel().toInt(), TURN_ARC_RADIUS.scaleInToPixel().toInt(),
                 min(startAngle.toDegrees().toInt(), endAngle.toDegrees().toInt()),
                 abs(startAngle.toDegrees().toInt() - endAngle.toDegrees().toInt())
         )
 
-        val arrowPointVec = Vector2d(TURN_ARC_WIDTH / 2, 0.0).rotated(endAngle)
+        val arrowPointVec = Vector2d(TURN_ARC_RADIUS / 2, 0.0).rotated(endAngle)
         val translatedPoint = (pos + arrowPointVec).toScreenCoord()
 
         var arrow1Rotated = endAngle - 90.0.toRadians() + TURN_ARROW_ANGLE + TURN_ARROW_ANGLE_ADJUSTMENT
