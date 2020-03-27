@@ -29,8 +29,6 @@ class TrajectoryProgressSlider(
             _progress
         }
 
-    private var pressed = false
-
     private var image = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
 
     init {
@@ -75,7 +73,7 @@ class TrajectoryProgressSlider(
                     progress * entity.currentTrajectorySequence!!.duration
             )
             g.drawString(
-                    "${progressText}s", width / 2 - (g.fontMetrics.stringWidth(
+                    "${progressText}s${if(entity.trajectoryPaused) " (paused)" else ""}", width / 2 - (g.fontMetrics.stringWidth(
                     progressText
             ).toDouble() / 2.0).toInt(), height / 2 + g.fontMetrics.height / 4
             )
@@ -86,13 +84,11 @@ class TrajectoryProgressSlider(
     }
 
     override fun mouseReleased(me: MouseEvent?) {
-        pressed = false
         entity.unPause()
         redraw()
     }
 
     override fun mousePressed(me: MouseEvent?) {
-        pressed = true
         entity.pause()
 
         val clipped = min(max(me!!.x.toDouble() / width.toDouble(), 0.0), 1.0)
