@@ -41,7 +41,7 @@ class RoadRunnerBotEntity(
     private var running = false
 
     private var trajectorySequenceElapsedTime = 0.0
-    private var trajectoryPaused = false
+    var trajectoryPaused = false
 
     private val SKIP_LOOPS = 2
     private var skippedLoops = 0
