@@ -70,7 +70,7 @@ Example "Main Code Dir" (the module name is "testingMeepMeep" in this image):
 
 10. Set up a configuration using [this](https://github.com/Lunerwalker2/MeepMeepRyan/blob/master/docs/images/QtUApgcWPU.mp4?raw=true) video.
 
-11. Once the Gradle Build finishes, the simulator should run! 
+11. Once the Gradle Build finishes, the simulator should run! To re-run the sim, press the Play icon on the top row of symbols in Android Studio.
 
 
 
