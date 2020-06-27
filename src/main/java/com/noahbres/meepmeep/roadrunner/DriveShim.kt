@@ -14,7 +14,7 @@ class DriveShim(private val driveTrainType: DriveTrainType, private val trajecto
     }
 
     fun trajectorySequenceBuilder(startPose: Pose2d): TrajectorySequenceBuilder {
-        return TrajectorySequenceBuilder(startPose, constraints, trackWidth)
+        return TrajectorySequenceBuilder(startPose, constraints)
     }
 
     @JvmOverloads

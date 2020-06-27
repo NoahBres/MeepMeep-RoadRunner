@@ -11,7 +11,7 @@ import com.noahbres.meepmeep.core.scaleInToPixel
 import com.noahbres.meepmeep.core.toRadians
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.toScreenCoord
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectoryStep
 import java.awt.BasicStroke
 import java.awt.Graphics2D
 import kotlin.math.cos

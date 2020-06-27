@@ -9,16 +9,9 @@ import com.acmerobotics.roadrunner.trajectory.MarkerCallback
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryConstraints
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedDisplacementMarker
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedMarker
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedSpatialMarker
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.bufferedmarker.BufferedTemporalMarker
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitConditionalStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
+import com.noahbres.meepmeep.core.exhaustive
 
-class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseConstraints: DriveConstraints, private val trackWidth: Double) {
+class TrajectorySequenceBuilder(startPose: Pose2d, private val baseConstraints: DriveConstraints) {
     private val trajectorySequence = TrajectorySequence()
 
     private var currentTrajectoryBuilder: TrajectoryBuilder? = null
@@ -117,21 +110,32 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
     fun addTemporalMarker(scale: Double, offset: Double, callback: MarkerCallback) = addTemporalMarker({ scale * it + offset }, callback)
 
     fun addTemporalMarker(time: (Double) -> Double, callback: MarkerCallback): TrajectorySequenceBuilder {
-        if (currentTrajectoryBuilder == null) markerBuffer.add(BufferedTemporalMarker(time, callback))
+        if (currentTrajectoryBuilder == null) markerBuffer.add(
+                BufferedTemporalMarker(
+                        time, callback
+                )
+        )
         else currentTrajectoryBuilder!!.addTemporalMarker(time, callback)
 
         return this
     }
 
     fun addSpatialMarker(point: Vector2d, callback: MarkerCallback): TrajectorySequenceBuilder {
-        if (currentTrajectoryBuilder == null) markerBuffer.add(BufferedSpatialMarker(point, callback))
+        if (currentTrajectoryBuilder == null) markerBuffer.add(
+                BufferedSpatialMarker(
+                        point, callback
+                )
+        )
         else currentTrajectoryBuilder!!.addSpatialMarker(point, callback)
 
         return this
     }
 
     fun addDisplacementMarker(callback: MarkerCallback): TrajectorySequenceBuilder {
-        if (currentTrajectoryBuilder == null) markerBuffer.add(BufferedDisplacementMarker({ 0.0 }, callback))
+        if (currentTrajectoryBuilder == null) markerBuffer.add(
+                BufferedDisplacementMarker(
+                        { 0.0 }, callback)
+        )
         else currentTrajectoryBuilder!!.addDisplacementMarker(callback)
 
         return this
@@ -142,7 +146,11 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
     fun addDisplacementMarker(scale: Double, offset: Double, callback: MarkerCallback) = addDisplacementMarker({ scale * it + offset }, callback)
 
     fun addDisplacementMarker(displacement: (Double) -> Double, callback: MarkerCallback): TrajectorySequenceBuilder {
-        if (currentTrajectoryBuilder == null) markerBuffer.add(BufferedDisplacementMarker(displacement, callback))
+        if (currentTrajectoryBuilder == null) markerBuffer.add(
+                BufferedDisplacementMarker(
+                        displacement, callback
+                )
+        )
         else currentTrajectoryBuilder!!.addDisplacementMarker(displacement, callback)
 
         return this
@@ -159,7 +167,11 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
         )
 
         pushPath()
-        trajectorySequence.add(TurnStep(lastPose.vec(), angle, turnProfile, currentDuration, turnProfile.duration()))
+        trajectorySequence.add(
+                TurnStep(
+                        lastPose.vec(), angle, turnProfile, currentDuration, turnProfile.duration()
+                )
+        )
 
         currentDuration += turnProfile.duration()
 
@@ -170,7 +182,11 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
 
     fun waitSeconds(seconds: Double): TrajectorySequenceBuilder {
         pushPath()
-        trajectorySequence.add(WaitStep(seconds, currentDuration, seconds))
+        trajectorySequence.add(
+                WaitStep(
+                        seconds, currentDuration, seconds
+                )
+        )
         currentDuration += seconds
 
         return this
@@ -178,7 +194,11 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
 
     fun waitFor(callback: WaitCallback): TrajectorySequenceBuilder {
         pushPath()
-        trajectorySequence.add(WaitConditionalStep(callback, currentDuration, 0.0))
+        trajectorySequence.add(
+                WaitConditionalStep(
+                        callback, currentDuration, 0.0
+                )
+        )
         currentDuration += 0.0
 
         return this
@@ -204,12 +224,16 @@ class TrajectorySequenceBuilder(private val startPose: Pose2d, private val baseC
                     is BufferedDisplacementMarker -> currentTrajectoryBuilder!!.addDisplacementMarker(it.displacement, it.callback)
                     is BufferedSpatialMarker -> currentTrajectoryBuilder!!.addSpatialMarker(it.point, it.callback)
                     is BufferedTemporalMarker -> currentTrajectoryBuilder!!.addTemporalMarker(it.time, it.callback)
-                }
+                }.exhaustive
             }
             markerBuffer.clear()
 
             val builtTraj = currentTrajectoryBuilder!!.build()
-            trajectorySequence.add(TrajectoryStep(builtTraj, currentDuration, builtTraj.duration()))
+            trajectorySequence.add(
+                    TrajectoryStep(
+                            builtTraj, currentDuration, builtTraj.duration()
+                    )
+            )
             currentDuration += builtTraj.duration()
         }
 

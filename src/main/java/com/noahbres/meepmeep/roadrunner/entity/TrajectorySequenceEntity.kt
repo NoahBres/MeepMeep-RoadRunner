@@ -4,11 +4,14 @@ import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.ThemedEntity
+import com.noahbres.meepmeep.core.exhaustive
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.toScreenCoord
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectoryStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.TurnStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.WaitConditionalStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.WaitStep
 import java.awt.*
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
@@ -111,7 +114,7 @@ class TrajectorySequenceEntity(
                             markerEntityList.add(markerEntity)
                             meepMeep.requestToAddEntity(markerEntity)
                         }
-                    }
+                    } else {}
                 }
                 is TurnStep -> {
                     val turnEntity = TurnIndicatorEntity(
@@ -121,7 +124,9 @@ class TrajectorySequenceEntity(
                     turnEntityList.add(turnEntity)
                     meepMeep.requestToAddEntity(turnEntity)
                 }
-            }
+                is WaitStep,
+                is WaitConditionalStep -> {}
+            }.exhaustive
         }
 
         gfx.stroke = outerStroke

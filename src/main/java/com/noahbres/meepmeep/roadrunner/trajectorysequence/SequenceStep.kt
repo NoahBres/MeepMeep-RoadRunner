@@ -1,9 +1,8 @@
-package com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep
+package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.profile.MotionProfile
 import com.acmerobotics.roadrunner.trajectory.Trajectory
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.WaitCallback
 
 sealed class SequenceStep(open val startTime: Double, open val duration: Double)
 

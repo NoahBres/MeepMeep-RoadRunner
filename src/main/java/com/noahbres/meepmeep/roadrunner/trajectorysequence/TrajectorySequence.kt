@@ -1,23 +1,19 @@
 package com.noahbres.meepmeep.roadrunner.trajectorysequence
 
 import com.acmerobotics.roadrunner.geometry.Pose2d
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.SequenceStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.WaitStep
 
 class TrajectorySequence : List<SequenceStep> {
     private val sequenceList = mutableListOf<SequenceStep>()
 
     private var cachedFirstPose = Pose2d()
-    private var firstPoseCachedDirty = false
+    private var firstPoseCacheDirty = false
 
     private var cachedDuration = 0.0
     private var durationCacheDirty = false
 
     val firstPose: Pose2d
         get() {
-            if (!firstPoseCachedDirty) return cachedFirstPose
+            if (!firstPoseCacheDirty) return cachedFirstPose
 
             this.forEach {
                 if (it is TrajectoryStep) {
@@ -35,35 +31,25 @@ class TrajectorySequence : List<SequenceStep> {
 
             cachedDuration = 0.0
             this.forEach {
-                if (it is TrajectoryStep)
-                    cachedDuration += it.trajectory.duration()
-                if (it is TurnStep)
-                    cachedDuration += it.motionProfile.duration()
-                else if (it is WaitStep)
-                    cachedDuration += it.seconds
+                cachedDuration += when (it) {
+                    is TrajectoryStep -> it.trajectory.duration()
+                    is TurnStep -> it.motionProfile.duration()
+                    is WaitStep -> it.seconds
+                    else -> 0.0
+                }
             }
 
             return cachedDuration
         }
 
     fun getCurrentState(time: Double): Pair<SequenceStep, Double> {
-        var totalTime = 0.0
-
         var currentStep: SequenceStep? = null
         var currentOffset = 0.0
 
-        val stepLengths = this.map {
-            totalTime += it.duration
-
-            totalTime
-        }
-
-        val stepStartTimes = this.map { it.startTime }
-
-        (this.sequenceList zip stepStartTimes).forEach { (sequenceStep, sequenceStart) ->
-            if (time >= sequenceStart) {
-                currentStep = sequenceStep
-                currentOffset = time - sequenceStart
+        this.forEach {
+            if(time >= it.startTime) {
+                currentStep = it
+                currentOffset = time - it.startTime
             }
         }
 
@@ -73,7 +59,7 @@ class TrajectorySequence : List<SequenceStep> {
     fun add(step: SequenceStep) {
         sequenceList.add(step)
 
-        firstPoseCachedDirty = true
+        firstPoseCacheDirty = true
         durationCacheDirty = true
     }
 

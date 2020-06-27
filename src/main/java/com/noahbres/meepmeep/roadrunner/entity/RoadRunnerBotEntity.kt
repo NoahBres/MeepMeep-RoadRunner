@@ -6,14 +6,13 @@ import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints
 import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.colorscheme.ColorScheme
 import com.noahbres.meepmeep.core.entity.BotEntity
+import com.noahbres.meepmeep.core.exhaustive
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.DriveShim
 import com.noahbres.meepmeep.roadrunner.DriveTrainType
 import com.noahbres.meepmeep.roadrunner.MeepMeepRoadRunner
 import com.noahbres.meepmeep.roadrunner.toMeepMeepPose
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TrajectoryStep
-import com.noahbres.meepmeep.roadrunner.trajectorysequence.sequencestep.TurnStep
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.*
 import com.noahbres.meepmeep.roadrunner.ui.TrajectoryProgressSlider
 
 class RoadRunnerBotEntity(
@@ -25,7 +24,7 @@ class RoadRunnerBotEntity(
         private val colorScheme: ColorScheme,
         opacity: Double
 ) : BotEntity(meepMeep, width, height, pose.toMeepMeepPose(), colorScheme, opacity) {
-    override val zIndex: Int = 5
+    override val zIndex: Int = 6
 
     private var driveTrainType = DriveTrainType.MECANUM
     var drive = DriveShim(driveTrainType, constraints, trackWidth)
@@ -85,16 +84,21 @@ class RoadRunnerBotEntity(
                             pose = currentStateStep.trajectory[currentStateOffset].toMeepMeepPose()
 
                             trajectorySequenceEntity!!.markerEntityList.forEach {
-                                if(it.trajectoryStep == currentStateStep) {
-                                    if(currentStateOffset >= it.time) it.passed()
+                                if (it.trajectoryStep == currentStateStep) {
+                                    if (currentStateOffset >= it.time) it.passed()
                                 }
                             }
                         }
                         is TurnStep -> {
                             val currVec = currentStateStep.pos
-                            pose = Pose2d(currVec.x, currVec.y, currentStateStep.motionProfile[currentStateOffset].x).toMeepMeepPose()
+                            pose = Pose2d(
+                                    currVec.x, currVec.y,
+                                    currentStateStep.motionProfile[currentStateOffset].x
+                            ).toMeepMeepPose()
                         }
-                    }
+                        is WaitStep,
+                        is WaitConditionalStep -> {}
+                    }.exhaustive
 
                     progressSlider.progress = (trajectorySequenceElapsedTime / currentTrajectorySequence!!.duration)
                 }
@@ -110,7 +114,7 @@ class RoadRunnerBotEntity(
                     trajectorySequenceElapsedTime = 0.0
                     currentTrajectorySequence = null
                 }
-            }
+            }.exhaustive
         }
     }
 

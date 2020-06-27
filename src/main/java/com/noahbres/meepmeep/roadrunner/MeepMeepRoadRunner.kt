@@ -8,9 +8,8 @@ import com.noahbres.meepmeep.core.MeepMeep
 import com.noahbres.meepmeep.core.util.FieldUtil
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity
 import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence
-import java.awt.BorderLayout
-import javax.swing.BoxLayout
-import javax.swing.JPanel
+import javax.swing.*
+import javax.swing.border.EtchedBorder
 
 class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowSize) {
     companion object {
@@ -19,14 +18,37 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
     }
 
     val sliderPanel = JPanel()
+    var middleButtonPanel = JPanel()
+
+    private val standardCursorButton = JButton("test")
+    private val pathSelectionButton = JButton("test 2")
+
+    private val middleButtonList = mutableListOf(standardCursorButton, pathSelectionButton)
 
     init {
+        // Handle UI
         sliderPanel.layout = BoxLayout(sliderPanel, BoxLayout.Y_AXIS)
-//        sliderPanel.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
 
-        windowFrame.contentPane.add(sliderPanel, BorderLayout.PAGE_END)
+        middleButtonList.forEach {
+            it.alignmentX = 0.5f
+            it.background = colorManager.theme.UI_MAIN_BG
+        }
+
+        middleButtonPanel.background = colorManager.theme.UI_MAIN_BG
+        middleButtonPanel.border = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)
+        middleButtonPanel.layout = BoxLayout(middleButtonPanel, BoxLayout.Y_AXIS)
+
+        middleButtonPanel.add(Box.createVerticalGlue())
+        middleButtonPanel.add(standardCursorButton)
+        middleButtonPanel.add(pathSelectionButton)
+        middleButtonPanel.add(Box.createVerticalGlue())
+
+        windowFrame.canvasPanel.add(sliderPanel)
+        windowFrame.contentPane.add(middleButtonPanel)
+
         windowFrame.pack()
 
+        // Handle entities
         DEFAULT_ROADRUNNER_BOT_ENTITY = RoadRunnerBotEntity(
                 this,
                 DriveConstraints(
@@ -115,6 +137,17 @@ class MeepMeepRoadRunner(windowSize: Int) : MeepMeep<MeepMeepRoadRunner>(windowS
             DEFAULT_ROADRUNNER_BOT_ENTITY.followTrajectoryList(trajectory)
 
         return this
+    }
+
+
+    override fun refreshTheme() {
+        super.refreshTheme()
+
+        middleButtonPanel.background = colorManager.theme.UI_MAIN_BG
+
+        middleButtonList.forEach {
+            it.background = colorManager.theme.UI_MAIN_BG
+        }
     }
 }
 
